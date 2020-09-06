@@ -1,0 +1,123 @@
+                           __________________
+
+                            LAB 05 QUESTIONS
+                           __________________
+
+
+- Name: (FILL THIS in)
+- NetID: (THE kauf0095 IN kauf0095@umn.edu)
+
+Answer the questions below according to the lab specification. Write
+your answers directly in this text file and submit it to complete Lab01.
+
+
+PROBLEM 1 `dirops.c'
+====================
+
+A
+~
+
+  Examine the source code of `dirops.c' closely. It makes use of a
+  variety of system calls to produce a semi-interesting effect.  Compile
+  and run it several times. Describe the overall intent of the program
+  based on its output and the code you understand.
+
+
+Solution                                                      :solution:
+--------
+
+  `dirops.c' scans the current directory to find the largest file in the
+  current directory and makes a copy of it to the file name
+  `file.txt.copy' if `file.txt' is the largest file.
+
+
+B
+~
+
+  What set of system calls is used by the program to determine all the
+  files in the current directory? Describe briefly how these calls work
+  together.
+
+
+Solution                                                      :solution:
+--------
+
+  `diropen()' opens a directory and allows successive calls to
+  `readdir()' to produce entries in the directory. These are stored in a
+  `struct dirent' which has fields such as the name of the file.
+
+
+C
+~
+
+  Identify the system call that `dirops.c' uses to find the sizes of
+  files. Describe briefly how this call works.
+
+
+Solution                                                      :solution:
+--------
+
+  `stat()' is used for sizes: given a name, it populates a `struct stat'
+  which has a field `st_size' which gives the size in bytes of the file.
+
+
+D
+~
+
+  The following line sets up the read/write permissions that the copied
+  file will have.
+  ,----
+  | mode_t perms = S_IRUSR | S_IWUSR;
+  `----
+  Modify this line so that the copied file is readable by the group as
+  well as the user.
+
+  /Optional challenge:/ Set the permissions to be identical to the
+  original file. `stat()' is one way to find out the permissions for the
+  original file.
+
+
+Solution                                                      :solution:
+--------
+
+  ,----
+  | mode_t perms = S_IRUSR | S_IWUSR | S_IRGRP;
+  | 
+  | // Optional: set the permissions to be identical to the original file
+  | stat(max_name, &sb);
+  | perms = sb.st_mode;
+  `----
+
+
+E
+~
+
+  `dirops.c' contains a subtle bug in the following bit of code towards
+  the end of the file.
+  ,----
+  |   while( (nbytes = read(infd, buf, BUFSIZE)) > 0){
+  |     write(outfd, buf, BUFSIZE);
+  |   }
+  `----
+  You should observe that every time program is run, it will identify a
+  copied file as the largest and make another copy due to this bug. It
+  may help to examine the ends of the copied files with the `tail
+  file.txt.copy' command which will show the last 10 lines.
+
+  Explain what is wrong with the loop and paste a fixed version below.
+
+
+Solution                                                      :solution:
+--------
+
+  The loop incorrectly writes the `BUFSIZE' every time. This may append
+  extra data to the end of the file in the event that fewer bytes are
+  read() in than the `BUFSIZE'.  Writing `nbytes' will guarantee that no
+  more bytes are written than are read. This will result in an identical
+  size of the copy.
+  ,----
+  |   while( (nbytes = read(infd, buf, BUFSIZE)) > 0){   // read until no bytes left
+  |     write(outfd, buf, nbytes);                       // correct write
+  |     // write(outfd, buf, BUFSIZE);                      // buggy write to outfd
+  |   }
+  `----

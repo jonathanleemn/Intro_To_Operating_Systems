@@ -1,0 +1,38 @@
+# This version uses automatic variables created by make to shorten the length
+# 
+# $< : the first dependency listed for a target, useful for
+#      compilation of a single C file
+# 
+# $@ : the name of the target, useful for generating executables with
+#      -o $@
+#
+# $^ : all dependencies, useful for compiling executables depending on
+#      many .o files
+CFLAGS = -Wall -g
+CC     = gcc $(CFLAGS)
+
+all : op_main
+
+outer_product.o : outer_product.c mat.h
+	$(CC) -c $<
+
+free_matrix.o : free_matrix.c mat.h
+	$(CC) -c $<
+
+op_main.o : op_main.c mat.h
+	$(CC) -c $<
+
+op_main : op_main.o outer_product.o free_matrix.o
+	$(CC) -o $@ $^
+
+test_outer_product.o : test_outer_product.c mat.h
+	$(CC) -c $<
+
+test_outer_product : test_outer_product.o outer_product.o
+	$(CC) -o $@ $^
+
+test : test_outer_product
+	./test_outer_product
+
+clean:
+	rm -f *.o op_main test_outer_product
